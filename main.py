@@ -1,8 +1,13 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List, Optional
 
-app = FastAPI()
+from schemas import Creativelead
+from database import create_document
+
+app = FastAPI(title="Creative Agency API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,6 +24,45 @@ def read_root():
 @app.get("/api/hello")
 def hello():
     return {"message": "Hello from the backend API!"}
+
+@app.get("/api/ping")
+def ping():
+    return {"status": "ok"}
+
+@app.post("/api/onboarding/lead")
+def create_lead(lead: Creativelead):
+    try:
+        lead_id = create_document("creativelead", lead)
+        return {"ok": True, "id": lead_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/services")
+def services():
+    return {
+        "services": [
+            {
+                "id": "brand",
+                "title": "Brand Identity",
+                "description": "Strategy, naming, and visual systems that stand out.",
+            },
+            {
+                "id": "product",
+                "title": "Product Design",
+                "description": "UX/UI for mobile and web with motion and micro-interactions.",
+            },
+            {
+                "id": "web",
+                "title": "Web Experiences",
+                "description": "High-performance websites with 3D and immersive visuals.",
+            },
+            {
+                "id": "content",
+                "title": "Content & Campaigns",
+                "description": "Launch creative with video, social, and performance assets.",
+            },
+        ]
+    }
 
 @app.get("/test")
 def test_database():
